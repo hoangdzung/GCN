@@ -18,13 +18,22 @@ import sys
 
 torch.manual_seed(0)
 def main(args):
+    dataset = 'Cora'
+    path = args.dataset_path
+    dataset = Planetoid(dataset_path, dataset)
     G = datagen.load_data(args.classifydir, True)
     X, Y = read_node_label(args.classifydir +'_labels.txt')
-    attr_matrix, adj, edge_index = process_graph(G)
-    attr_matrix = torch.LongTensor(attr_matrix)
-    adj = torch.LongTensor(adj)
-    edge_index = torch.LongTensor(edge_index)
+    # attr_matrix, adj, edge_index = process_graph(G)
+    # attr_matrix = torch.LongTensor(attr_matrix)
+    # adj = torch.LongTensor(adj)
+    # edge_index = torch.LongTensor(edge_index)
 
+    attr_matrix = dataset[0].x 
+    edge_index = dataset[0].edge_index
+
+    adj = torch.zeros((attr_matrix.shape[0],attr_matrix.shape[0]))
+    adj[edge_index] = 1
+    
     model = GCNet(attr_matrix.shape[1], args.embedding_size)
     optimizer = torch.optim.Adam(model.parameters(), lr=0.01, weight_decay=5e-4)
     if args.use_cuda:
