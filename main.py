@@ -4,9 +4,9 @@ import torch
 import torch.nn.functional as F
 from torch_geometric.datasets import Planetoid
 import torch_geometric.transforms as T
-from torch_geometric.nn import GCNConv
+from torch_geometric.nn import GCNConv, DeepGraphInfomax
 
-from models import GCNet
+from models import GCNNet, GATNet
 from loss import n2v_loss, edge_balance_loss
 import gen.data as datagen
 import argparse
@@ -14,7 +14,7 @@ import networkx as nx
 from sklearn.linear_model import LogisticRegression
 
 from openne.classify import Classifier, read_node_label
-from utils import process_graph, embed_arr_2_dict
+from utils import process_graph, embed_arr_2_dict, corruption
 import sys 
 
 torch.manual_seed(0)
@@ -34,8 +34,11 @@ def main(args):
 
     adj = torch.zeros((attr_matrix.shape[0],attr_matrix.shape[0]))
     adj[edge_index] = 1
+    if args.net_type == 'gcn':
+        model = GCNNet(attr_matrix.shape[1], args.embedding_size)
+    elif args.net_type == 'gat':
+        model = GATNet(attr_matrix.shape[1], args.embedding_size)
 
-    model = GCNet(attr_matrix.shape[1], args.embedding_size)
     optimizer = torch.optim.Adam(model.parameters(), lr=0.1, weight_decay=5e-4)
     if args.use_cuda:
         attr_matrix, adj, edge_index = attr_matrix.cuda(), adj.cuda(), edge_index.cuda()
@@ -67,6 +70,8 @@ def parse_arguments():
             help='Directory containing graph classify data')
     parser.add_argument('--loss_type', 
             help='n2v or edge')
+    parser.add_argument('--net_type', 
+            help='gcn or eat')
     parser.add_argument('--embedding_size', type=int,
                         help='Dimension of node embeddings, default=128', default=128)
     parser.add_argument('--n_epochs', type=int,

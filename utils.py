@@ -1,5 +1,6 @@
 import networkx as nx 
 import numpy as np 
+import torch
 
 def process_graph(G):
     adj = nx.adjacency_matrix(G)
@@ -15,7 +16,10 @@ def embed_arr_2_dict(embed_arr, G): ##keep
     for idx, node in enumerate(G.nodes()):
         embed_dict[str(node)] = embed_arr[idx]
     return embed_dict
-    
+
+def corruption(x, edge_index):
+    return x[torch.randperm(x.size(0))], edge_index
+
 if __name__ == "__main__":
     import gen.data as datagen
     G = datagen.load_data('./data/cora/cora',True)
