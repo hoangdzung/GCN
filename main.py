@@ -62,3 +62,7 @@ def parse_arguments(argv):
                         help='Number of training step, default = 3000', default=3000)
                     
     return parser.parse_args(argv)
+
+if __name__ == '__main__':
+    args = parse_arguments()
+    main(args)
