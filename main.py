@@ -54,6 +54,8 @@ def parse_arguments(argv):
                         help='Using GPU or not')
     parser.add_argument('--classifydir', dest='classifydir',
             help='Directory containing graph classify data')
+    parser.add_argument('--loss_type', ,
+            help='n2v or edge')
     parser.add_argument('--embedding_dim', type=int,
                         help='Dimension of node embeddings, default=128', default=128)
     parser.add_argument('--n_epochs', type=int,
