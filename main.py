@@ -36,7 +36,7 @@ def main(args):
     adj[edge_index] = 1
 
     model = GCNet(attr_matrix.shape[1], args.embedding_size)
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.01, weight_decay=5e-4)
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.1, weight_decay=5e-4)
     if args.use_cuda:
         attr_matrix, adj, edge_index = attr_matrix.cuda(), adj.cuda(), edge_index.cuda()
         model = model.cuda()
@@ -49,14 +49,14 @@ def main(args):
         model.train()
         optimizer.zero_grad()
         emebedding = model(attr_matrix, edge_index)
-        loss = loss_fn(emebedding, adj).backward()
+        loss = loss_fn(emebedding, adj)
         loss.backward()
         optimizer.step()
         if i %5 == 0:
-            vectors = embed_arr_2_dict(emebedding.numpy(), G)
+            vectors = embed_arr_2_dict(emebedding.detach().numpy(), G)
             clf = Classifier(vectors=vectors, clf=LogisticRegression(solver="lbfgs", max_iter=4000))
             scores = clf.split_train_evaluate(X, Y,0.5)
-            print(scores)
+            print(loss, scores)
 
 def parse_arguments():
     parser = argparse.ArgumentParser()
