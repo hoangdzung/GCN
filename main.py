@@ -21,21 +21,21 @@ def main(args):
     G = datagen.load_data(args.classifydir, True)
     X, Y = read_node_label(args.classifydir +'_labels.txt')
     attr_matrix, adj, edge_index = process_graph(G)
-    attr_matrix = torch.FloatTensor(attr_matrix)
-    adj = torch.FloatTensor(adj)
-    edge_index = torch.FloatTensor(edge_index)
+    attr_matrix = torch.LongTensor(attr_matrix)
+    adj = torch.LongTensor(adj)
+    edge_index = torch.LongTensor(edge_index)
 
-    model = GCNet(X.shape[1], args.embedding_size)
+    model = GCNet(attr_matrix.shape[1], args.embedding_size)
     optimizer = torch.optim.Adam(model.parameters(), lr=0.01, weight_decay=5e-4)
     if args.use_cuda:
-        attr_matrix, adj, edge_index = attr_matrixX.cuda(), adj.cuda(), edge_index.cuda()
+        attr_matrix, adj, edge_index = attr_matrix.cuda(), adj.cuda(), edge_index.cuda()
         model = model.cuda()
     if args.loss_type == 'n2v':
-        loss_fn = n2v_loss()
+        loss_fn = n2v_loss
     elif args.loss_type == "edge":
-        loss_fn = edge_balance_loss()
+        loss_fn = edge_balance_loss
 
-    for i in range(args.epochs):
+    for i in range(args.n_epochs):
         model.train()
         optimizer.zero_grad()
         emebedding = model(attr_matrix, edge_index)
@@ -48,7 +48,7 @@ def main(args):
             scores = clf.split_train_evaluate(X, Y,0.5)
             print(scores)
 
-def parse_arguments(argv):
+def parse_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument('--use_cuda', action='store_true',
                         help='Using GPU or not')
@@ -56,12 +56,12 @@ def parse_arguments(argv):
             help='Directory containing graph classify data')
     parser.add_argument('--loss_type', 
             help='n2v or edge')
-    parser.add_argument('--embedding_dim', type=int,
+    parser.add_argument('--embedding_size', type=int,
                         help='Dimension of node embeddings, default=128', default=128)
     parser.add_argument('--n_epochs', type=int,
                         help='Number of training step, default = 3000', default=3000)
                     
-    return parser.parse_args(argv)
+    return parser.parse_args()
 
 if __name__ == '__main__':
     args = parse_arguments()
