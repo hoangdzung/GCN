@@ -11,6 +11,7 @@ from loss import n2v_loss, edge_balance_loss
 import gen.data as datagen
 import argparse
 import networkx as nx 
+from sklearn.linear_model import LogisticRegression
 
 from openne.classify import Classifier, read_node_label
 from utils import process_graph, embed_arr_2_dict
@@ -19,8 +20,8 @@ import sys
 torch.manual_seed(0)
 def main(args):
     dataset = 'Cora'
-    path = args.dataset_path
-    dataset = Planetoid(dataset_path, dataset)
+    path = args.datapath
+    dataset = Planetoid(path, dataset)
     G = datagen.load_data(args.classifydir, True)
     X, Y = read_node_label(args.classifydir +'_labels.txt')
     # attr_matrix, adj, edge_index = process_graph(G)
@@ -33,7 +34,7 @@ def main(args):
 
     adj = torch.zeros((attr_matrix.shape[0],attr_matrix.shape[0]))
     adj[edge_index] = 1
-    
+
     model = GCNet(attr_matrix.shape[1], args.embedding_size)
     optimizer = torch.optim.Adam(model.parameters(), lr=0.01, weight_decay=5e-4)
     if args.use_cuda:
@@ -61,6 +62,7 @@ def parse_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument('--use_cuda', action='store_true',
                         help='Using GPU or not')
+    parser.add_argument('--datapath',)
     parser.add_argument('--classifydir', dest='classifydir',
             help='Directory containing graph classify data')
     parser.add_argument('--loss_type', 
