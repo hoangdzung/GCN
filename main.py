@@ -4,7 +4,7 @@ import torch
 import torch.nn.functional as F
 from torch_geometric.datasets import Planetoid
 import torch_geometric.transforms as T
-from torch_geometric.nn import GCNConv, ChebCon
+from torch_geometric.nn import GCNConv
 
 from models import GCNet
 from loss import n2v_loss, edge_balance_loss
@@ -16,6 +16,7 @@ from openne.classify import Classifier, read_node_label
 from utils import process_graph, embed_arr_2_dict
 import sys 
 
+torch.manual_seed(0)
 def main(args):
     G = datagen.load_data(args.classifydir, True)
     X, Y = read_node_label(args.classifydir +'_labels.txt')
@@ -33,8 +34,7 @@ def main(args):
         loss_fn = n2v_loss()
     elif args.loss_type == "edge":
         loss_fn = edge_balance_loss()
-    else:
-        raise Exception, "must specify loss type"
+
     for i in range(args.epochs):
         model.train()
         optimizer.zero_grad()
@@ -42,7 +42,7 @@ def main(args):
         loss = loss_fn(emebedding, adj).backward()
         loss.backward()
         optimizer.step()
-        if i %5 = 0:
+        if i %5 == 0:
             vectors = embed_arr_2_dict(emebedding.numpy(), G)
             clf = Classifier(vectors=vectors, clf=LogisticRegression(solver="lbfgs", max_iter=4000))
             scores = clf.split_train_evaluate(X, Y,0.5)
@@ -54,7 +54,7 @@ def parse_arguments(argv):
                         help='Using GPU or not')
     parser.add_argument('--classifydir', dest='classifydir',
             help='Directory containing graph classify data')
-    parser.add_argument('--loss_type', ,
+    parser.add_argument('--loss_type', 
             help='n2v or edge')
     parser.add_argument('--embedding_dim', type=int,
                         help='Dimension of node embeddings, default=128', default=128)
