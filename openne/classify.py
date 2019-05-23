@@ -70,6 +70,13 @@ class Classifier(object):
         numpy.random.set_state(state)
         return self.evaluate(X_test, Y_test)
 
+    def train_evaluate(self, X_train, Y_train, X_test, Y_test, Y, seed=0):
+        state = numpy.random.get_state()
+
+        numpy.random.seed(seed)
+        self.train(X_train, Y_train, Y)
+        numpy.random.set_state(state)
+        return self.evaluate(X_test, Y_test)
 
 def load_embeddings(filename):
     fin = open(filename, 'r')

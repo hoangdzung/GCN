@@ -17,6 +17,7 @@ from openne.classify import Classifier, read_node_label
 from utils import process_graph, embed_arr_2_dict, corruption
 import sys 
 import pdb
+from tqdm import tqdm
 
 torch.manual_seed(0)
 def main(args):
@@ -59,7 +60,7 @@ def main(args):
     elif args.loss_type == "edge":
         loss_fn = edge_balance_loss
 
-    for i in range(args.n_epochs):
+    for i in tqdm(range(args.n_epochs)):
         model.train()
         optimizer.zero_grad()
         emebedding = model(attr_matrix, edge_index)
