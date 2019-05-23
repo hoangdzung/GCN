@@ -59,6 +59,9 @@ def main(args):
     elif args.loss_type == "edge":
         loss_fn = edge_balance_loss
 
+    best_score = 0
+    best_clf = None
+
     for i in range(args.n_epochs):
         model.train()
         optimizer.zero_grad()
@@ -77,6 +80,13 @@ def main(args):
             clf = Classifier(vectors=vectors, clf=LogisticRegression(solver="lbfgs", max_iter=4000))
             scores = clf.train_evaluate(X_train, y_train, X_test, y_test, Y)
             print(i, loss.detach().cpu().numpy(), scores)
+            if scores['micro'] > best_score:
+                best_score = scores['micro']
+                best_clf = clf
+    # pdb.set_trace()
+    X_val = list(map(str, map(int,nodes[dd.train_mask].detach().cpu().numpy())))
+    y_val = list(map(str, map(int,dd.y[dd.train_mask].detach().cpu().numpy())))
+    print("Testing ", best_clf.evaluate(X_val, y_val))
 
 def parse_arguments():
     parser = argparse.ArgumentParser()
