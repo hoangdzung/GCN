@@ -6,7 +6,7 @@ from torch_geometric.datasets import Planetoid
 import torch_geometric.transforms as T
 from torch_geometric.nn import GCNConv, DeepGraphInfomax
 
-from models import GCNNet, GATNet
+from models import GCNNet, GATNet, SGNet, SAGENet
 from loss import n2v_loss, edge_balance_loss
 import gen.data as datagen
 import argparse
@@ -16,14 +16,17 @@ from sklearn.linear_model import LogisticRegression
 from openne.classify import Classifier, read_node_label
 from utils import process_graph, embed_arr_2_dict, corruption
 import sys 
+import pdb
 
 torch.manual_seed(0)
 def main(args):
     dataset = 'Cora'
     path = args.datapath
     dataset = Planetoid(path, dataset)
-    G = datagen.load_data(args.classifydir, True)
-    X, Y = read_node_label(args.classifydir +'_labels.txt')
+    dd = dataset[0]
+    # G = datagen.load_data(args.classifydir, True)
+    # X, Y = read_node_label(args.classifydir +'_labels.txt')
+    
     # attr_matrix, adj, edge_index = process_graph(G)
     # attr_matrix = torch.LongTensor(attr_matrix)
     # adj = torch.LongTensor(adj)
@@ -31,13 +34,21 @@ def main(args):
 
     attr_matrix = dataset[0].x 
     edge_index = dataset[0].edge_index
+    
 
     adj = torch.zeros((attr_matrix.shape[0],attr_matrix.shape[0]))
+    G = nx.from_numpy_matrix(adj.detach().cpu().numpy())
+    nodes = torch.Tensor(list(G.nodes()))
+    
     adj[edge_index] = 1
     if args.net_type == 'gcn':
         model = GCNNet(attr_matrix.shape[1], args.embedding_size)
     elif args.net_type == 'gat':
         model = GATNet(attr_matrix.shape[1], args.embedding_size)
+    elif args.net_type == 'sage':
+        model = SAGENet(attr_matrix.shape[1], args.embedding_size)
+    elif args.net_type == 'sg':
+        model = SGNet(attr_matrix.shape[1], args.embedding_size)
 
     optimizer = torch.optim.Adam(model.parameters(), lr=0.1, weight_decay=5e-4)
     if args.use_cuda:
@@ -55,11 +66,17 @@ def main(args):
         loss = loss_fn(emebedding, adj)
         loss.backward()
         optimizer.step()
-        if i %5 == 0:
+        if i %100 == 0:
+            X_train = list(map(str, map(int, nodes[dd.test_mask].detach().cpu().numpy())))
+            y_train = list(map(str, map(int,dd.y[dd.test_mask].detach().cpu().numpy())))
+            X_test = list(map(str, map(int,nodes[dd.val_mask].detach().cpu().numpy())))
+            y_test = list(map(str, map(int,dd.y[dd.val_mask].detach().cpu().numpy())))
+            Y = list(map(str, map(int, dd.y.detach().cpu().numpy().tolist())))
+
             vectors = embed_arr_2_dict(emebedding.detach().numpy(), G)
             clf = Classifier(vectors=vectors, clf=LogisticRegression(solver="lbfgs", max_iter=4000))
-            scores = clf.split_train_evaluate(X, Y,0.5)
-            print(loss, scores)
+            scores = clf.train_evaluate(X_train, y_train, X_test, y_test, Y)
+            print(i, loss.detach().cpu().numpy(), scores)
 
 def parse_arguments():
     parser = argparse.ArgumentParser()
