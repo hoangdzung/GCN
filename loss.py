@@ -13,7 +13,7 @@ def n2v_loss(embedding, adj):
     node2vec_loss = sigmoid_cross_entropy_with_logits(embed_pairwise, labels)
     return node2vec_loss
 
-def edge_balance_loss(embedding, lam=0.7):
+def edge_balance_loss(embedding, adj, lam=0.7):
     n = adj.shape[0]
     g = embedding.shape[1]
     embedding_T = torch.transpose(embedding,0,1)
