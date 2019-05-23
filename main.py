@@ -17,10 +17,8 @@ from openne.classify import Classifier, read_node_label
 from utils import process_graph, embed_arr_2_dict, corruption
 import sys 
 import pdb
-<<<<<<< HEAD
-=======
 from tqdm import tqdm
->>>>>>> 4c0b6d8081826fec88401ef78dcd84c51e2b5d59
+
 
 torch.manual_seed(0)
 def main(args):
