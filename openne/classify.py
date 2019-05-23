@@ -78,7 +78,6 @@ class Classifier(object):
         numpy.random.set_state(state)
         return self.evaluate(X_test, Y_test)
 
-
 def load_embeddings(filename):
     fin = open(filename, 'r')
     node_num, size = [int(x) for x in fin.readline().strip().split()]

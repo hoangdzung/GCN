@@ -17,6 +17,10 @@ from openne.classify import Classifier, read_node_label
 from utils import process_graph, embed_arr_2_dict, corruption
 import sys 
 import pdb
+<<<<<<< HEAD
+=======
+from tqdm import tqdm
+>>>>>>> 4c0b6d8081826fec88401ef78dcd84c51e2b5d59
 
 torch.manual_seed(0)
 def main(args):
@@ -59,10 +63,12 @@ def main(args):
     elif args.loss_type == "edge":
         loss_fn = edge_balance_loss
 
+
     best_score = 0
     best_clf = None
 
-    for i in range(args.n_epochs):
+    for i in tqdm(range(args.n_epochs)):
+
         model.train()
         optimizer.zero_grad()
         emebedding = model(attr_matrix, edge_index)
@@ -80,6 +86,7 @@ def main(args):
             clf = Classifier(vectors=vectors, clf=LogisticRegression(solver="lbfgs", max_iter=4000))
             scores = clf.train_evaluate(X_train, y_train, X_test, y_test, Y)
             print(i, loss.detach().cpu().numpy(), scores)
+
             if scores['micro'] > best_score:
                 best_score = scores['micro']
                 best_clf = clf
@@ -87,6 +94,7 @@ def main(args):
     X_val = list(map(str, map(int,nodes[dd.train_mask].detach().cpu().numpy())))
     y_val = list(map(str, map(int,dd.y[dd.train_mask].detach().cpu().numpy())))
     print("Testing ", best_clf.evaluate(X_val, y_val))
+
 
 def parse_arguments():
     parser = argparse.ArgumentParser()
