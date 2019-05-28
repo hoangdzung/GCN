@@ -10,11 +10,32 @@ class GCNNet(torch.nn.Module):
         self.conv1 = GCNConv(num_features, embedding_size*2, cached=True)
         self.conv2 = GCNConv(embedding_size*2, embedding_size, cached=True)
 
+    def sample_gumbel(self, shape, eps=1e-20):
+        U = torch.rand(shape)
+        return -Variable(torch.log(-torch.log(U + eps) + eps))
+
+    def gumbel_softmax_sample(self, logits, temperature):
+        y = logits + self.sample_gumbel(logits.size())
+        return F.softmax(y / temperature, dim=-1)
+
+    def gumbel_softmax(self, logits, temperature):
+        """
+        input: [*, n_class]
+        return: [*, n_class] an one-hot vector
+        """
+        y = self.gumbel_softmax_sample(logits, temperature)
+        shape = y.size()
+        _, ind = y.max(dim=-1)
+        y_hard = torch.zeros_like(y).view(-1, shape[-1])
+        y_hard.scatter_(1, ind.view(-1, 1), 1)
+        y_hard = y_hard.view(*shape)
+        return (y_hard - y).detach() + y
+
     def forward(self,x, edge_index):
         x = F.relu(self.conv1(x, edge_index))
-        x = F.dropout(x, training=self.training)
+        # x = F.dropout(x, training=self.training)
         x = self.conv2(x, edge_index)
-        return x 
+        return self.gumbel_softmax(x, 0.6) 
 
 class SAGENet(torch.nn.Module):
     def __init__(self, num_features, embedding_size=128):
