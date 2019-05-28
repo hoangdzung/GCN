@@ -69,8 +69,8 @@ def main(args):
 
         model.train()
         optimizer.zero_grad()
-        emebedding = model(attr_matrix, edge_index)
-        loss = loss_fn(emebedding, adj)
+        embedding = model(attr_matrix, edge_index)
+        loss = loss_fn(embedding, adj)
         loss.backward()
         optimizer.step()
         if i %100 == 0:
@@ -80,7 +80,7 @@ def main(args):
             y_test = list(map(str, map(int,dd.y[dd.val_mask].detach().cpu().numpy())))
             Y = list(map(str, map(int, dd.y.detach().cpu().numpy().tolist())))
 
-            vectors = embed_arr_2_dict(emebedding.detach().numpy(), G)
+            vectors = embed_arr_2_dict(model.embedding.detach().numpy(), G)
             clf = Classifier(vectors=vectors, clf=LogisticRegression(solver="lbfgs", max_iter=4000))
             scores = clf.train_evaluate(X_train, y_train, X_test, y_test, Y)
             print(i, loss.detach().cpu().numpy(), scores)

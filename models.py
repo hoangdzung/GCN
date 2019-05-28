@@ -36,6 +36,7 @@ class GCNNet(torch.nn.Module):
         x = F.relu(self.conv1(x, edge_index))
         # x = F.dropout(x, training=self.training)
         x = self.conv2(x, edge_index)
+        self.embedding = x
         return self.gumbel_softmax(x, 0.6) 
 
 class SAGENet(torch.nn.Module):
