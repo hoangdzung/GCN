@@ -7,12 +7,12 @@ from torch.autograd import Variable
 
 def sample_gumbel(shape, eps=1e-20):
     U = torch.rand(shape)
-    if torch.cuda.is_available()::
+    if torch.cuda.is_available():
         U = U.cuda()
     return -Variable(torch.log(-torch.log(U + eps) + eps))
 
 def gumbel_softmax_sample(logits, temperature):
-    y = logits + self.sample_gumbel(logits.size())
+    y = logits + sample_gumbel(logits.size())
     return F.softmax(y / temperature, dim=-1)
 
 def gumbel_softmax(logits, temperature):
@@ -42,7 +42,7 @@ class GCNNet(torch.nn.Module):
         # x = F.dropout(x, training=self.training)
         x = self.conv2(x, edge_index)
         self.embedding = x
-        return self.gumbel_softmax(x, 0.6) 
+        return gumbel_softmax(x, 0.6) 
 
 class SAGENet(torch.nn.Module):
     def __init__(self, num_features, embedding_size=128, slope=1.0):
@@ -55,7 +55,8 @@ class SAGENet(torch.nn.Module):
         x = F.leaky_relu(self.conv1(x, edge_index), self.slope)
         # x = F.dropout(x, training=self.training)
         x = self.conv2(x, edge_index)
-        return self.gumbel_softmax(x, 0.6)          
+        self.embedding = x
+        return gumbel_softmax(x, 0.6)          
 
 class GATNet(torch.nn.Module):
     def __init__(self,num_features, embedding_size=128, slope=1.0):
@@ -69,7 +70,8 @@ class GATNet(torch.nn.Module):
         x = F.leaky_relu(self.conv1(x, edge_index), self.slope)
         # x = F.dropout(x, p=0.6, training=self.training)
         x = self.conv2(x, edge_index)
-        return self.gumbel_softmax(x, 0.6)  
+        self.embedding = x
+        return gumbel_softmax(x, 0.6)  
 
 class SGNet(torch.nn.Module):
     def __init__(self, num_features, embedding_size=128, slope=None):
