@@ -44,13 +44,13 @@ def main(args):
     
     adj[edge_index] = 1
     if args.net_type == 'gcn':
-        model = GCNNet(attr_matrix.shape[1], args.embedding_size, args.slope)
+        model = GCNNet(attr_matrix.shape[1], args.embedding_size, args.slope, args.temp)
     elif args.net_type == 'gat':
-        model = GATNet(attr_matrix.shape[1], args.embedding_size, args.slope)
+        model = GATNet(attr_matrix.shape[1], args.embedding_size, args.slope, args.temp)
     elif args.net_type == 'sage':
-        model = SAGENet(attr_matrix.shape[1], args.embedding_size, args.slope)
+        model = SAGENet(attr_matrix.shape[1], args.embedding_size, args.slope, args.temp)
     elif args.net_type == 'sg':
-        model = SGNet(attr_matrix.shape[1], args.embedding_size, args.slope)
+        model = SGNet(attr_matrix.shape[1], args.embedding_size, args.slope, args.temp)
 
     optimizer = torch.optim.Adam(model.parameters(), lr=0.1, weight_decay=5e-4)
     if args.use_cuda:
@@ -107,6 +107,8 @@ def parse_arguments():
             help='gcn or eat')
     parser.add_argument('--slope',type=float, 
             help='Slope of leaky_relu')
+    parser.add_argument('--temp',type=float, 
+            help='Temp of gumbel softmax')
     parser.add_argument('--embedding_size', type=int,
                         help='Dimension of node embeddings, default=128', default=128)
     parser.add_argument('--n_epochs', type=int,

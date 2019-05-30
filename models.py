@@ -31,9 +31,10 @@ def gumbel_softmax(logits, temperature):
     return (y_hard - y).detach() + y
 
 class GCNNet(torch.nn.Module):
-    def __init__(self, num_features, embedding_size=128, slope=1.0):
+    def __init__(self, num_features, embedding_size=128, slope=1.0, temp=0.6):
         super(GCNNet, self).__init__()
         self.slope = slope
+        self.temp  = temp
         self.conv1 = GCNConv(num_features, embedding_size*2, cached=True)
         self.conv2 = GCNConv(embedding_size*2, embedding_size, cached=True)
 
@@ -42,12 +43,13 @@ class GCNNet(torch.nn.Module):
         # x = F.dropout(x, training=self.training)
         x = self.conv2(x, edge_index)
         self.embedding = x
-        return gumbel_softmax(x, 0.6) 
+        return gumbel_softmax(x, self.temp) 
 
 class SAGENet(torch.nn.Module):
-    def __init__(self, num_features, embedding_size=128, slope=1.0):
+    def __init__(self, num_features, embedding_size=128, slope=1.0, temp=0.6):
         super(SAGENet, self).__init__()
         self.slope = slope
+        self.temp = temp
         self.conv1 = SAGEConv(num_features, embedding_size*2)
         self.conv2 = SAGEConv(embedding_size*2, embedding_size)
 
@@ -56,12 +58,13 @@ class SAGENet(torch.nn.Module):
         # x = F.dropout(x, training=self.training)
         x = self.conv2(x, edge_index)
         self.embedding = x
-        return gumbel_softmax(x, 0.6)          
+        return gumbel_softmax(x, self.temp)          
 
 class GATNet(torch.nn.Module):
-    def __init__(self,num_features, embedding_size=128, slope=1.0):
+    def __init__(self,num_features, embedding_size=128, slope=1.0, temp=0.6):
         super(GATNet, self).__init__()
         self.slope = slope
+        self.temp = temp
         self.conv1 = GATConv(num_features, 8, heads=8, dropout=0.6)
         self.conv2 = GATConv(8 * 8, embedding_size, dropout=0.6)
 
@@ -71,10 +74,10 @@ class GATNet(torch.nn.Module):
         # x = F.dropout(x, p=0.6, training=self.training)
         x = self.conv2(x, edge_index)
         self.embedding = x
-        return gumbel_softmax(x, 0.6)  
+        return gumbel_softmax(x, self.temp)  
 
 class SGNet(torch.nn.Module):
-    def __init__(self, num_features, embedding_size=128, slope=None):
+    def __init__(self, num_features, embedding_size=128, slope=None, temp= None):
         super(SGNet, self).__init__()
         self.conv1 = SGConv(
             num_features, embedding_size, K=2, cached=True)
