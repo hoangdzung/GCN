@@ -80,7 +80,7 @@ def main(args):
             y_test = list(map(str, map(int,dd.y[dd.val_mask].detach().cpu().numpy())))
             Y = list(map(str, map(int, dd.y.detach().cpu().numpy().tolist())))
 
-            vectors = embed_arr_2_dict(model.embedding.detach().numpy(), G)
+            print(model.embedding.detach().cpu());vectors = embed_arr_2_dict(model.embedding.detach().cpu().numpy(), G)
             clf = Classifier(vectors=vectors, clf=LogisticRegression(solver="lbfgs", max_iter=4000))
             scores = clf.train_evaluate(X_train, y_train, X_test, y_test, Y)
             print(i, loss.detach().cpu().numpy(), scores)
