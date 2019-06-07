@@ -22,4 +22,4 @@ def edge_balance_loss(embedding, adj, lam=0.7):
     # balance_loss = torch.sum((torch.sum(self.assign_tensor, dim=1) - self.input_dim//self.num_parts)**2)
     balance_loss = torch.sum((torch.diagonal(pred) - torch.sum(torch.diagonal(pred))/g)**2)
         
-    return lam*ncut_loss+(1-lam)*balance_loss + 0.01*n2v_loss(embedding, adj)
+    return lam*ncut_loss+(1-lam)*balance_loss
