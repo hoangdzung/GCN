@@ -53,7 +53,7 @@ def main(args):
     elif args.net_type == 'sg':
         model = SGNet(attr_matrix.shape[1], args.embedding_size, args.slope, args.temp)
 
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.1, weight_decay=5e-4)
+    optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=5e-4)
     if args.use_cuda:
         attr_matrix, adj, edge_index = attr_matrix.cuda(), adj.cuda(), edge_index.cuda()
         model = model.cuda()
@@ -118,6 +118,8 @@ def parse_arguments():
     parser.add_argument('--temp',type=float, 
             help='Temp of gumbel softmax')
     parser.add_argument('--batch_size',type=int, default=128, 
+            help='')
+    parser.add_argument('--lr',type=float, 
             help='')
     parser.add_argument('--embedding_size', type=int,
                         help='Dimension of node embeddings, default=128', default=128)
