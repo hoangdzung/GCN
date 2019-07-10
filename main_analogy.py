@@ -100,7 +100,7 @@ def parse_arguments():
                         help='Dimension of node embeddings, default=128', default=128)
     parser.add_argument('--n_epochs', type=int,
                         help='Number of training step, default = 3000', default=3000)
-    parser.add_argument('--output_file')                    
+    parser.add_argument('--combination_file')                    
     return parser.parse_args()
 
 if __name__ == '__main__':
