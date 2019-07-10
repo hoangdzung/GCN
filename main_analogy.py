@@ -21,19 +21,22 @@ def cos_sim(embedding, x):
         embedding[x[3]]+embedding[x[4]]+embedding[x[5]])
         
 def main(args):
-    combinations = np.load(args.combination_file).tolist()
+
+    G = nx.read_edgelist(args.edgelist_path, nodetype=int)
+    n_nodes = len(G.nodes())
+    
+    combinations = np.load(args.combination_file)
+    linear_size = combinations.shape[1]
+    combinations = combinations.tolist()
     combinations_list =  [(set(combination[:3]), set(combination[3:])) for combination in combinations]
     non_combinations = []
-    while (len(non_combinations) < combinations.shape[0]):
-        non_combination = np.random.choice(np.arange(args.dim), size=(combinations.shape[1]), replace=False)
+    while (len(non_combinations) < len(combinations)):
+        non_combination = np.random.choice(np.arange(n_nodes), size=(linear_size), replace=False)
         if (set(non_combination[:3]), set(non_combination[3:])) in combinations_list \
             or (set(non_combination[3:]), set(non_combination[:3])) in combinations_list:
             continue
 
         non_combinations.append(non_combination.tolist())
-
-    G = nx.read_edgelist(args.edgelist_path, nodetype=int)
-    n_nodes = len(G.nodes())
 
     attr_matrix = torch.ones(n_nodes, args.attr_dim)    
     edge_index = torch.LongTensor(np.array([list(edge) for edge in G.edges()]).T)
