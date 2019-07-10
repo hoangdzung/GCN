@@ -12,10 +12,26 @@ import numpy as np
 import sys 
 import pdb
 from tqdm import tqdm
-
+from scipy import spatial
+from sklearn.metrics import roc_auc_score
 
 torch.manual_seed(0)
+def cos_sim(embedding, x):
+    return 1 - spatial.distance.cosine(embedding[x[0]]+embedding[x[1]]+embedding[x[2]],\
+        embedding[x[3]]+embedding[x[4]]+embedding[x[5]])
+        
 def main(args):
+    combinations = np.load(args.combination_file).tolist()
+    combinations_list =  [set(set(combination[:3]), set(combination[3:])) for combination in combinations]
+    non_combinations = []
+    while (len(non_combinations) < combinations.shape[0]):
+        non_combination = np.random.choice(np.arange(args.dim), size=(combinations.shape[1]), replace=False)
+        if (set(non_combination[:3]), set(non_combination[3:])) in combinations_list \
+            or (set(non_combination[3:]), set(non_combination[:3])) in combinations_list:
+            continue
+
+        non_combinations.append(non_combination.tolist())
+
     G = nx.read_edgelist(args.edgelist_path, nodetype=int)
     n_nodes = len(G.nodes())
 
@@ -33,19 +49,32 @@ def main(args):
         loss_fn = n2v_loss
     elif args.loss_type == "edge":
         loss_fn = edge_balance_loss
-    best_loss = 1e100
-    embedd_np = None
+    # best_loss = 1e100
+    # embedd_np = None
     for i in tqdm(range(args.n_epochs)):
         model.train()
         optimizer.zero_grad()
         embedding = model(attr_matrix, edge_index)
         loss = loss_fn(embedding, adj)
-        if loss.cpu().item() < best_loss:
-            best_loss = loss.cpu().item()
-            embedd_np = embedding.detach().cpu().numpy()
+        # if loss.cpu().item() < best_loss:
+        #     best_loss = loss.cpu().item()
+        embedd_np = embedding.detach().cpu().numpy()
         loss.backward()
         optimizer.step()
-        if i % 100==0: print(loss.cpu().item())
+        if i % 100==0: 
+            sims = []
+            labels = []
+
+            for combination in combinations:
+                labels.append(1)
+                sims.append(cos_sim(embedd_np, combination))
+
+            for non_combination in non_combinations:
+                labels.append(0)
+                sims.append(cos_sim(embedd_np, non_combination))
+
+            print(roc_auc_score(labels, sims))
+            print(loss.cpu().item())
 
     np.save(args.output_file, embedd_np)
 
