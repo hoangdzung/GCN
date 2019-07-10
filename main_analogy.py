@@ -22,7 +22,7 @@ def cos_sim(embedding, x):
         
 def main(args):
     combinations = np.load(args.combination_file).tolist()
-    combinations_list =  [set(set(combination[:3]), set(combination[3:])) for combination in combinations]
+    combinations_list =  [(set(combination[:3]), set(combination[3:])) for combination in combinations]
     non_combinations = []
     while (len(non_combinations) < combinations.shape[0]):
         non_combination = np.random.choice(np.arange(args.dim), size=(combinations.shape[1]), replace=False)
