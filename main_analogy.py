@@ -16,12 +16,12 @@ from tqdm import tqdm
 
 torch.manual_seed(0)
 def main(args):
-    G = nx.read_edgelist(args.edgelist_path)
+    G = nx.read_edgelist(args.edgelist_path, nodetype=int)
     n_nodes = len(G.nodes())
 
     attr_matrix = torch.ones(n_nodes, args.attr_dim)    
     edge_index = torch.LongTensor(np.array([list(edge) for edge in G.edges()]).T)
-    adj = torch.LongTensor(nx.adjacency_matrix(G))
+    adj = torch.FloatTensor(nx.adjacency_matrix(G).toarray())
     
     model = SGNet(args.attr_dim, args.embedding_size, args.slope, args.temp)
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=5e-4)
@@ -33,15 +33,21 @@ def main(args):
         loss_fn = n2v_loss
     elif args.loss_type == "edge":
         loss_fn = edge_balance_loss
-
+    best_loss = 1e100
+    embedd_np = None
     for i in tqdm(range(args.n_epochs)):
         model.train()
         optimizer.zero_grad()
         embedding = model(attr_matrix, edge_index)
         loss = loss_fn(embedding, adj)
+        if loss.cpu().item() < best_loss:
+            best_loss = loss.cpu().item()
+            embedd_np = embedding.detach().cpu().numpy()
         loss.backward()
         optimizer.step()
-        print(loss)
+        if i % 100==0: print(loss.cpu().item())
+
+    np.save(args.output_file, embedd_np)
 
 def parse_arguments():
     parser = argparse.ArgumentParser()
@@ -65,7 +71,7 @@ def parse_arguments():
                         help='Dimension of node embeddings, default=128', default=128)
     parser.add_argument('--n_epochs', type=int,
                         help='Number of training step, default = 3000', default=3000)
-                    
+    parser.add_argument('--output_file')                    
     return parser.parse_args()
 
 if __name__ == '__main__':
