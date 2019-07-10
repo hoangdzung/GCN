@@ -52,8 +52,8 @@ def main(args):
         loss_fn = n2v_loss
     elif args.loss_type == "edge":
         loss_fn = edge_balance_loss
-    # best_loss = 1e100
-    # embedd_np = None
+    best_loss = 1e100
+    best_auc = 0
     for i in tqdm(range(args.n_epochs)):
         model.train()
         optimizer.zero_grad()
@@ -64,7 +64,7 @@ def main(args):
         embedd_np = embedding.detach().cpu().numpy()
         loss.backward()
         optimizer.step()
-        if i % 100==0: 
+        if i % 5==0: 
             sims = []
             labels = []
 
@@ -76,11 +76,14 @@ def main(args):
                 labels.append(0)
                 sims.append(cos_sim(embedd_np, non_combination))
 
-            print(roc_auc_score(labels, sims))
-            print(loss.cpu().item())
-
-    np.save(args.output_file, embedd_np)
-
+            auc = roc_auc_score(labels, sims))
+            print(auc, loss.cpu().item())
+            if best_loss > loss.cpu().item():
+                best_loss = loss.cpu().item()
+                best_auc = auc 
+    
+    print(best_auc)
+    
 def parse_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument('--use_cuda', action='store_true',
